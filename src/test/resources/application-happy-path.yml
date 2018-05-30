@@ -1,0 +1,5 @@
+my:
+  properties:
+    some_mandatory_property: "123456"
+    some_optional_property: "abcdef"
+    some_default_property: "overwritten"
