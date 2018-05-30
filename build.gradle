@@ -1,0 +1,23 @@
+version '0.1.0'
+
+apply plugin: 'java'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+    compile "org.projectlombok:lombok:1.16.14"
+    compile "javax.validation:validation-api:2.0.0.Final"
+
+    testCompile "org.hibernate:hibernate-validator:6.0.8.Final"
+    testCompile "org.springframework.boot:spring-boot-starter-test:1.5.8.RELEASE"
+    testCompile "junit:junit:4.12"
+    testCompile "org.glassfish:javax.el:'3.0.0"
+    testCompile "org.assertj:assertj-core:3.9.1"
+    testCompile "org.yaml:snakeyaml:1.20"
+}

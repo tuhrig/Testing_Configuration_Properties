@@ -1,0 +1,3 @@
+my:
+  properties:
+    some_mandatory_property: "123456"
