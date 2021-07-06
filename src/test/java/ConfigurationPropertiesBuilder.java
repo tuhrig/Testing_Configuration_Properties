@@ -1,31 +1,35 @@
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
-import org.springframework.boot.bind.PropertiesConfigurationFactory;
-import org.springframework.core.env.MutablePropertySources;
+import org.springframework.boot.context.properties.bind.Bindable;
+import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.boot.context.properties.bind.validation.ValidationBindHandler;
+import org.springframework.boot.context.properties.source.ConfigurationPropertySource;
+import org.springframework.boot.context.properties.source.ConfigurationPropertySources;
 import org.springframework.core.env.PropertiesPropertySource;
+import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.validation.BindException;
 import org.springframework.validation.Validator;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
 public class ConfigurationPropertiesBuilder<T> {
 
-    private T object;
+    private Class<T> clazz;
     private String fileName;
     private String prefix;
     private Validator validator;
-    private Properties properties = new Properties();
-    private List<String> propertiesToRemove = new ArrayList<>();
+    private final Properties properties = new Properties();
+    private final List<String> propertiesToRemove = new ArrayList<>();
 
     public static <T> ConfigurationPropertiesBuilder<T> builder() {
         return new ConfigurationPropertiesBuilder<T>();
     }
 
-    public ConfigurationPropertiesBuilder<T> populate(T object) {
-        this.object = object;
+    public ConfigurationPropertiesBuilder<T> populate(Class<T> clazz) {
+        this.clazz = clazz;
         return this;
     }
 
@@ -54,23 +58,24 @@ public class ConfigurationPropertiesBuilder<T> {
         return this;
     }
 
-    public T build() throws BindException {
+    public T build() {
 
         Properties propertiesFromFile = loadYamlProperties(fileName);
         propertiesToRemove.forEach(properties::remove);
         propertiesToRemove.forEach(propertiesFromFile::remove);
 
-        MutablePropertySources propertySources = new MutablePropertySources();
-        propertySources.addLast(new PropertiesPropertySource("properties", properties));
-        propertySources.addLast(new PropertiesPropertySource("propertiesFromFile", propertiesFromFile));
+        PropertiesPropertySource sourceA = new PropertiesPropertySource("properties", properties);
+        PropertiesPropertySource sourceB = new PropertiesPropertySource("propertiesFromFile", propertiesFromFile);
+        Iterable<PropertySource<?>> list = Arrays.asList(sourceA, sourceB);
 
-        PropertiesConfigurationFactory<T> configurationFactory = new PropertiesConfigurationFactory<>(object);
-        configurationFactory.setPropertySources(propertySources);
-        configurationFactory.setTargetName(prefix);
-        configurationFactory.setValidator(validator);
-        configurationFactory.bindPropertiesToTarget();
+        Iterable<ConfigurationPropertySource> propertySource = ConfigurationPropertySources.from(list);
+        Binder binder = new Binder(propertySource);
 
-        return object;
+        return binder.bind(
+                prefix,
+                Bindable.of(clazz),
+                new ValidationBindHandler(validator)
+        ).get();
     }
 
     private Properties loadYamlProperties(String fileName) {

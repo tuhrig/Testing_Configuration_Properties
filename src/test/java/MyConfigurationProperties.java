@@ -1,4 +1,5 @@
 import lombok.Data;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import javax.validation.constraints.NotNull;
@@ -8,6 +9,7 @@ import javax.validation.constraints.NotNull;
 public class MyConfigurationProperties {
 
     @NotNull
+    @Length(min = 4)
     private String someMandatoryProperty;
 
     private String someOptionalProperty;
